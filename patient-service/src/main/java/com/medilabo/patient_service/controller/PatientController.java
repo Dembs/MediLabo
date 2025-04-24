@@ -19,26 +19,26 @@ public class PatientController {
     @Autowired
     private PatientService patientService;
 
-    @GetMapping("/patients")
+    @GetMapping
     public ResponseEntity<List<Patient>> getAllPatients() {
         List<Patient> patientsList = patientService.getAllPatients();
 
         return ResponseEntity.ok(patientsList);
     }
 
-    @GetMapping("/patient/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Patient> getPatientById(@PathVariable Integer id) {
         Patient patient = patientService.getPatient(id);
         return ResponseEntity.ok(patient);
     }
 
-    @PutMapping("/patient/{id}/update")
+    @PutMapping("/{id}")
     public ResponseEntity<Patient> updatePatient(@PathVariable Integer id, @RequestBody Patient updatedPatient) {
         Patient patient = patientService.updatePatient(updatedPatient,id);
         return ResponseEntity.ok(patient);
     }
 
-    @PostMapping("/patients/create")
+    @PostMapping
     public ResponseEntity<Patient> createPatient(@RequestBody Patient newPatient) {
         Patient patient = patientService.createPatient(newPatient);
         return ResponseEntity.status(HttpStatus.CREATED).body(patient);
