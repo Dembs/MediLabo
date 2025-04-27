@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Patients</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 5px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Liste des Patients</h1>
+<p><a th:href="@{/ui/patients/add}">Ajouter un Nouveau Patient</a></p>
+<div th:if="${errorMessage}" class="error">
+    <p th:text="${errorMessage}">Erreur lors de la récupération des données.</p>
+</div>
+<div th:if="${successMessage}" style="color: green; font-weight: bold;" th:text="${successMessage}"></div>
+<div th:if="${errorMessage}" style="color: red; font-weight: bold;" th:text="${errorMessage}"></div>
+<div th:unless="${errorMessage}">
+    <div th:if="${patients == null or patients.isEmpty()}">
+        <p>Aucun patient trouvé.</p>
+    </div>
+
+    <table th:if="${patients != null and not patients.isEmpty()}">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Date de Naissance</th>
+            <th>Genre</th>
+            <th>Adresse</th>
+            <th>Téléphone</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="patient : ${patients}">
+            <td th:text="${patient.id}">1</td>
+            <td th:text="${patient.lastName}">Nom Test</td>
+            <td th:text="${patient.firstName}">Prénom Test</td>
+            <td th:text="${patient.birthdate}">2000-01-01</td>
+            <td th:text="${patient.gender}">F</td>
+            <td th:text="${patient.address}">1 rue Test</td>
+            <td th:text="${patient.phoneNumber}">0123456789</td>
+            <td>
+                <a th:href="@{/ui/patients/{id}(id=${patient.id})}">Voir Détails</a>
+                <a th:href="@{/ui/patients/edit/{id}(id=${patient.id})}">Modifier</a>
+                <form th:action="@{/ui/patients/delete/{id}(id=${patient.id})}" method="post" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce patient ?');">
+                    <button type="submit" class="link-button">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
+</div>
+
+
+<!-- Lien de déconnexion fourni par Spring Security -->
+<form th:action="@{/logout}" method="post">
+    <input type="submit" value="Se déconnecter"/>
+</form>
+
+</body>
+</html>

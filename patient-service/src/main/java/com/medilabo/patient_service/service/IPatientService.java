@@ -13,4 +13,6 @@ public interface IPatientService {
     Patient updatePatient(Patient patient, int patientId);
 
     Patient createPatient(Patient patient);
+
+    boolean deletePatient(int patientId);
 }

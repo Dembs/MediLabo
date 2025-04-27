@@ -45,4 +45,13 @@ public class PatientService implements IPatientService {
     public Patient createPatient(Patient patient) {
         return patientRepository.save(patient);
     }
+
+    @Override
+    public boolean deletePatient(int patientId) {
+        if (patientRepository.existsById(patientId)) {
+            patientRepository.deleteById(patientId);
+            return true;
+        }
+        return false;
+    }
 }

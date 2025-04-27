@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Détails Patient</title>
+    <style> .error { color: red; font-weight: bold; } </style>
+</head>
+<body>
+
+<h1>Détails du Patient</h1>
+
+<div th:if="${errorMessage}" class="error">
+    <p th:text="${errorMessage}">Erreur</p>
+</div>
+
+<div th:unless="${errorMessage}" th:if="${patient != null}">
+    <p><strong>ID:</strong> <span th:text="${patient.id}">1</span></p>
+    <p><strong>Nom :</strong> <span th:text="${patient.lastName}">Nom</span></p>
+    <p><strong>Prénom:</strong> <span th:text="${patient.firstName}">Prénom</span></p>
+    <p><strong>Date de Naissance :</strong> <span th:text="${patient.birthdate}">Date</span></p>
+    <p><strong>Genre :</strong> <span th:text="${patient.gender}">Genre</span></p>
+    <p><strong>Adresse :</strong> <span th:text="${patient.address} ?: 'Non renseignée'">Adresse</span></p>
+    <p><strong>Téléphone :</strong> <span th:text="${patient.phoneNumber} ?: 'Non renseigné'">Téléphone</span></p>
+
+</div>
+<p><a th:href="@{/ui/patients/edit/{id}(id=${patient.id})}">Modifier</a></p>
+<p><a th:href="@{/ui/patients}">Retour à la liste</a></p>
+
+</body>
+</html>

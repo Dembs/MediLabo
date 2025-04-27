@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter un Patient</title>
+    <style> label, input { display: block; margin-bottom: 10px; } </style>
+</head>
+<body>
+
+<h1>Ajouter un Nouveau Patient</h1>
+
+<!-- Le formulaire pointe vers l'URL de sauvegarde POST et utilise l'objet 'patient' du modèle -->
+<form th:action="@{/ui/patients/save}" th:object="${patient}" method="post">
+    <div>
+        <label for="lastName">Nom:</label>
+        <input type="text" id="lastName" th:field="*{lastName}" required/>
+    </div>
+    <div>
+        <label for="firstName">Prénom:</label>
+        <input type="text" id="firstName" th:field="*{firstName}" required/>
+    </div>
+    <div>
+        <label for="birthdate">Date de Naissance (YYYY-MM-DD):</label>
+        <input type="text" id="birthdate" th:field="*{birthdate}" placeholder="YYYY-MM-DD" required/>
+    </div>
+    <div>
+        <label for="gender">Genre (M/F):</label>
+        <input type="text" id="gender" th:field="*{gender}" maxlength="1" required/>
+    </div>
+    <div>
+        <label for="address">Adresse (Optionnel):</label>
+        <input type="text" id="address" th:field="*{address}" />
+    </div>
+    <div>
+        <label for="phoneNumber">Téléphone (Optionnel):</label>
+        <input type="text" id="phoneNumber" th:field="*{phoneNumber}" />
+    </div>
+    <div>
+        <button type="submit">Enregistrer</button>
+    </div>
+</form>
+
+<p><a th:href="@{/ui/patients}">Retour à la liste</a></p>
+
+</body>
+</html>
