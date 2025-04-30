@@ -8,7 +8,8 @@
 <body>
 
 <h1>Détails du Patient</h1>
-
+<div th:if="${successMessage}" class="success-message" th:text="${successMessage}" style="color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px;"></div>
+<div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}" style="color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px;"></div>
 <div th:if="${errorMessage}" class="error">
     <p th:text="${errorMessage}">Erreur</p>
 </div>
@@ -25,6 +26,29 @@
 </div>
 <p><a th:href="@{/ui/patients/edit/{id}(id=${patient.id})}">Modifier</a></p>
 <p><a th:href="@{/ui/patients}">Retour à la liste</a></p>
+<!-- Historique des Notes (seulement si patient trouvé ET pas d'erreur) -->
+<div class="notes-section" th:if="${patient != null and errorMessage == null}">
+    <h2>Historique des Notes</h2>
+
+    <div th:if="${noteErrorMessage}" class="note-error-message" th:text="${noteErrorMessage}"></div>
+    <div th:if="${patientNotes != null and #lists.isEmpty(patientNotes) and noteErrorMessage == null}">
+        <p>Aucune note enregistrée pour ce patient.</p>
+    </div>
+
+    <ul class="notes-list" th:if="${patientNotes != null and not #lists.isEmpty(patientNotes)}">
+        <!-- Itération sur chaque note dans la liste patientNotes -->
+        <li th:each="note : ${patientNotes}">
+            <p th:text="${note.note}" style="white-space: pre-wrap;">Contenu de la note...</p>
+        </li>
+    </ul>
+    <p th:if="${patient != null}">
+        <a th:href="@{/ui/notes/add(patId=${patient.id})}" class="btn-add-note">Ajouter une Nouvelle Note</a>
+    </p>
+</div>
+<div th:if="${errorMessage != null}">
+    <p><a th:href="@{/ui/patients}">Retour à la liste</a></p>
+</div>
+
 
 </body>
 </html>

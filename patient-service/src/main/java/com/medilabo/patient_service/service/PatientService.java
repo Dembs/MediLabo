@@ -3,19 +3,39 @@ package com.medilabo.patient_service.service;
 import com.medilabo.patient_service.model.Patient;
 import com.medilabo.patient_service.repository.PatientRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Collections;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 
 @Service
 public class PatientService implements IPatientService {
     private final PatientRepository patientRepository;
-
+    private final RestTemplate restTemplate;
+    private static final Logger log = LoggerFactory.getLogger(PatientService.class);
     @Autowired
-    public PatientService(PatientRepository patientRepository) {
+    public PatientService(PatientRepository patientRepository, RestTemplate restTemplate) {
         this.patientRepository = patientRepository;
+        this.restTemplate = restTemplate;
     }
+
+    @Value("${api.gateway.url}") // URL de la gateway
+    private String apiGatewayUrl;
 
     @Override
     public List<Patient> getAllPatients() {
@@ -46,12 +66,42 @@ public class PatientService implements IPatientService {
         return patientRepository.save(patient);
     }
 
-    @Override
+    @Transactional
     public boolean deletePatient(int patientId) {
-        if (patientRepository.existsById(patientId)) {
-            patientRepository.deleteById(patientId);
-            return true;
+        if (!patientRepository.existsById(patientId)) {
+            return false;
         }
-        return false;
+
+        // Supprimer les notes associées via l'API Gateway
+        String deleteNotesUrl = apiGatewayUrl + "/notes/" + patientId; // Construire l'URL
+
+        try {
+            // Authentification
+            String auth = "user" + ":" + "password";
+            byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.UTF_8));
+            String authHeader = "Basic " + new String(encodedAuth);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", authHeader);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Appel DELETE à notes-service via gateway
+            ResponseEntity<Void> response = restTemplate.exchange(
+                    deleteNotesUrl,
+                    HttpMethod.DELETE,
+                    entity,
+                    Void.class
+            );
+
+        }
+        catch (RestClientException e) {
+            log.error("Erreur RestClient [...] Le patient sera quand même supprimé.", patientId, e.getMessage());
+        } catch (Exception e) {
+            log.error("Erreur inattendue [...] Le patient sera quand même supprimé.", patientId, e.getMessage());
+        }
+        // Supprimer le patient de la base de données locale (SQL)
+
+        patientRepository.deleteById(patientId);
+
+        return true;
     }
 }
