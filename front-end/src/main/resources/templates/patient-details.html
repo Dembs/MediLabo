@@ -45,6 +45,22 @@
         <a th:href="@{/ui/notes/add(patId=${patient.id})}" class="btn-add-note">Ajouter une Nouvelle Note</a>
     </p>
 </div>
+<div>
+    <h2>Évaluation du Risque de Diabète</h2>
+    <p>
+        Niveau de risque :
+        <strong th:if="${diabetesRisk != null and diabetesRisk != 'N/A' and diabetesRisk != 'Erreur évaluation'}"
+                th:text="${diabetesRisk}"
+                th:classappend="${#strings.equals(diabetesRisk,'NONE')} ? 'text-success' :
+                                       (${#strings.equals(diabetesRisk,'BORDERLINE')} ? 'text-warning' :
+                                       (${#strings.equals(diabetesRisk,'IN_DANGER')} ? 'text-danger' :
+                                       (${#strings.equals(diabetesRisk,'EARLY_ONSET')} ? 'text-danger fw-bold' : '')))">
+            IN_DANGER
+        </strong>
+        <span th:if="${diabetesRisk == 'N/A' or diabetesRisk == 'Erreur évaluation'}"
+              th:text="${diabetesRisk}" class="text-muted">N/A</span>
+    </p>
+</div>
 <div th:if="${errorMessage != null}">
     <p><a th:href="@{/ui/patients}">Retour à la liste</a></p>
 </div>

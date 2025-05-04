@@ -1,5 +1,6 @@
 package com.medilabo.api_gateway.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -21,12 +22,18 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Value("${backend.api.username}")
+    private String backendApiUsername;
+
+    @Value("${backend.api.password}")
+    private String backendApiPassword;
+
     // Définit les utilisateurs en mémoire pour l'environnement réactif
     @Bean
     public MapReactiveUserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails user = User.builder()
-                               .username("user")
-                               .password(passwordEncoder.encode("password")) // Même mot de passe que dans patient-service
+                               .username(backendApiUsername)
+                               .password(passwordEncoder.encode(backendApiPassword))
                                .roles("USER")
                                .build();
         return new MapReactiveUserDetailsService(user);

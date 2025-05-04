@@ -11,7 +11,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -39,10 +38,11 @@ public class PatientUiController {
 
     @Value("${backend.api.password}")
     private String backendApiPassword;
+
     @GetMapping("/patients")
     public String listPatients(Model model) {
 
-        String url = apiGatewayUrl + "/patients"; // Construire l'URL complète de l'API via la gateway
+        String url = apiGatewayUrl + "/patients";
 
         try {
             // Création de l'en-tête d'authentification Basic
@@ -52,7 +52,7 @@ public class PatientUiController {
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", authHeader);
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON)); // On attend du JSON
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -61,7 +61,7 @@ public class PatientUiController {
                     url,
                     HttpMethod.GET,
                     entity,
-                    new ParameterizedTypeReference<List<Patient>>() {} //ParameterizedTypeReference pour gérer correctement la liste générique List<Patient>
+                    new ParameterizedTypeReference<List<Patient>>() {}
             );
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
@@ -83,8 +83,8 @@ public class PatientUiController {
     @GetMapping("/patients/{id}")
     public String viewPatient(@PathVariable("id") int id, Model model) {
         String patientUrl = apiGatewayUrl + "/patients/" + id;
-        // URL des notes via la gateway
         String notesUrl = apiGatewayUrl + "/notes/" + id;
+        String diabetesUrl = apiGatewayUrl + "/diabetes/" + id;
 
         String auth = backendApiUsername + ":" + backendApiPassword;
         byte[] encodedAuth = Base64.getEncoder().encode(auth.getBytes(StandardCharsets.UTF_8));
@@ -123,7 +123,6 @@ public class PatientUiController {
         //Si le patient a été trouvé, récupérer ses notes
         if (patientFound) {
             try {
-                // ParameterizedTypeReference pour désérialiser la List<Note>
                 ResponseEntity<List<Note>> notesResponse = restTemplate.exchange(
                         notesUrl,
                         HttpMethod.GET,
@@ -143,6 +142,28 @@ public class PatientUiController {
                 log.error("Erreur inattendue lors de la récupération des notes pour ID {}", id, e);
                 model.addAttribute("patientNotes", new ArrayList<Note>());
                 model.addAttribute("noteErrorMessage", "Erreur inattendue (Notes).");
+            }
+            // Récupération Évaluation Risque Diabète
+            try {
+
+                ResponseEntity<String> diabetesResponse = restTemplate.exchange(
+                        diabetesUrl,
+                        HttpMethod.GET,
+                        entity,
+                        String.class
+                );
+
+                if (diabetesResponse.getStatusCode() == HttpStatus.OK && diabetesResponse.getBody() != null) {
+                    String riskLevelString = diabetesResponse.getBody();
+                    log.info("Risque diabète reçu pour patient ID {}: {}", id, riskLevelString);
+                    model.addAttribute("diabetesRisk", riskLevelString);
+                } else {
+                    log.warn("Erreur lors de la récupération de l'évaluation diabète pour patient ID {}, statut: {}", id, diabetesResponse.getStatusCode());
+                    model.addAttribute("diabetesRisk", "Erreur évaluation");
+                }
+            } catch (Exception e) {
+                log.error("Erreur inattendue lors de l'appel à l'évaluation diabète pour ID {}", id, e);
+                model.addAttribute("diabetesRisk", "Erreur évaluation");
             }
         }
         return "patient-details";
@@ -185,7 +206,7 @@ public class PatientUiController {
     public String showAddPatientForm(Model model) {
 
         // Crée un objet Patient vide pour le binding du formulaire
-        model.addAttribute("patient", new Patient(0, "", "", "", "", "", "")); // ID 0 ou null si type Long
+        model.addAttribute("patient", new Patient(0, "", "", "", "", "", ""));
         return "add-patient-form";
     }
 
