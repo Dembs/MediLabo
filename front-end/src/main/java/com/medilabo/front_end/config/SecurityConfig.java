@@ -1,5 +1,6 @@
 package com.medilabo.front_end.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -22,11 +23,16 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    @Value("${BACKEND_API_USERNAME}")
+    private String backendApiUsername;
+
+    @Value("${BACKEND_API_PASSWORD}")
+    private String backendApiPassword;
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails user = User.builder()
-                               .username("user")
-                               .password(passwordEncoder.encode("password"))
+                               .username(backendApiUsername)
+                               .password(passwordEncoder.encode(backendApiPassword))
                                .roles("USER")
                                .build();
         return new InMemoryUserDetailsManager(user);

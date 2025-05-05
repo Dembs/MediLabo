@@ -22,10 +22,10 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Value("${backend.api.username}")
+    @Value("${SPRING_SECURITY_USER_NAME}")
     private String backendApiUsername;
 
-    @Value("${backend.api.password}")
+    @Value("${SPRING_SECURITY_USER_PASSWORD}")
     private String backendApiPassword;
 
     // Définit les utilisateurs en mémoire pour l'environnement réactif

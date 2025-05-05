@@ -8,10 +8,10 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
  public class AppConfig {
-    @Value("${backend.api.username}")
+    @Value("${GATEWAY_AUTH_USERNAME}")
     private String backendApiUsername;
 
-    @Value("${backend.api.password}")
+    @Value("${GATEWAY_AUTH_PASSWORD}")
     private String backendApiPassword;
 
     @Bean
