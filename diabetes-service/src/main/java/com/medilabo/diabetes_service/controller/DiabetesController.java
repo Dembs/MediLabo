@@ -5,12 +5,14 @@ import com.medilabo.diabetes_service.service.DiabetesService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Contrôleur REST exposant les API pour l'évaluation du risque de diabète.
+ */
 @RestController
 @RequestMapping("/diabetes")
 public class DiabetesController {
@@ -26,9 +28,12 @@ public class DiabetesController {
 
     /**
      * Évalue le risque de diabète pour un patient donné par son ID.
+     * Récupère les notes médicales du patient via les services appropriés,
+     * analyse leur contenu et détermine le niveau de risque en fonction
+     * des termes déclencheurs identifiés.
      *
-     * @param patientId L'ID du patient à évaluer.
-     * @return Le niveau de risque de diabète calculé (sérialisé en JSON).
+     * @param patientId L'ID du patient à évaluer
+     * @return Le niveau de risque de diabète calculé (NONE, BORDERLINE, IN_DANGER ou EARLY_ONSET)
      */
     @GetMapping("/{patientId}")
     public DiabetesRiskLevel getDiabetesAssessment(@PathVariable int patientId) {
@@ -36,25 +41,5 @@ public class DiabetesController {
         DiabetesRiskLevel riskLevel = diabetesService.assessDiabetesRisk(patientId);
         log.info("Évaluation terminée pour patient ID {}. Risque: {}", patientId, riskLevel);
         return riskLevel;
-
-        /* Alternative avec ResponseEntity pour plus de contrôle (ex: codes de statut)
-           try {
-               DiabetesRiskLevel riskLevel = diabetesAssessmentService.assessDiabetesRisk(patientId);
-               log.info("Évaluation terminée pour patient ID {}. Risque: {}", patientId, riskLevel);
-               return ResponseEntity.ok(riskLevel);
-           } catch (PatientNotFoundException e) { // Si vous définissez des exceptions spécifiques
-               log.warn("Tentative d'évaluation pour patient non trouvé ID: {}", patientId);
-               return ResponseEntity.notFound().build();
-           } catch (Exception e) {
-               log.error("Erreur interne lors de l'évaluation du patient ID: {}", patientId, e);
-               return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-           }
-        */
     }
-
-    // Vous pourriez ajouter d'autres endpoints ici si nécessaire, par exemple :
-    // - Un endpoint POST qui prendrait directement les infos patient et notes en body
-    //   (moins microservice, mais possible)
-    // - Un endpoint pour évaluer sur la base du nom/prénom (nécessiterait d'abord un appel à patient-service pour trouver l'ID)
-
 }

@@ -14,20 +14,40 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Configuration de sécurité de l'application front-end.
+ * On définit les règles d'authentification et d'autorisation pour l'application,
+ * en utilisant Spring Security pour sécuriser les endpoints et gérer les connexions utilisateur.
+ * Utilise une authentification en mémoire avec les mêmes identifiants que ceux utilisés
+ * pour communiquer avec les API backend.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     @Value("${BACKEND_API_USERNAME}")
     private String backendApiUsername;
 
     @Value("${BACKEND_API_PASSWORD}")
     private String backendApiPassword;
+
+    /**
+     * Crée un encodeur de mot de passe pour le stockage sécurisé des mots de passe.
+     *
+     * @return Un encodeur de mot de passe BCrypt
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Configure le service user details en mémoire.
+     * Utilise les mêmes identifiants que ceux configurés pour les appels d'API backend.
+     *
+     * @param passwordEncoder L'encodeur de mot de passe à utiliser
+     * @return Un service de détails utilisateur avec l'utilisateur configuré
+     */
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails user = User.builder()
@@ -38,6 +58,14 @@ public class SecurityConfig {
         return new InMemoryUserDetailsManager(user);
     }
 
+    /**
+     * Configure la filter chain de sécurité pour définir les règles d'authentification
+     * et d'autorisation de l'application.
+     *
+     * @param http L'objet HttpSecurity à configurer
+     * @return La chaîne de filtres de sécurité configurée
+     * @throws Exception Si une erreur survient lors de la configuration
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http

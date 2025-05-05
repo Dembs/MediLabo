@@ -21,6 +21,11 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Contrôleur d'interface utilisateur pour la gestion des patients et leurs notes associées.
+ * Sert d'intermédiaire entre la couche de présentation (vues Thymeleaf) et les APIs backend
+ * exposées via l'API gateway.
+ */
 @Controller
 @RequestMapping("/ui")
 public class PatientUiController {
@@ -39,6 +44,12 @@ public class PatientUiController {
     @Value("${backend.api.password}")
     private String backendApiPassword;
 
+    /**
+     * Récupère et affiche la liste de tous les patients.
+     *
+     * @param model Le modèle Spring utilisé pour transmettre des données à la vue
+     * @return Le nom de la vue à afficher
+     */
     @GetMapping("/patients")
     public String listPatients(Model model) {
 
@@ -80,6 +91,15 @@ public class PatientUiController {
         return "patients";
     }
 
+
+    /**
+     * Affiche les détails d'un patient spécifique, incluant ses notes associées et
+     * l'évaluation du risque de diabète.
+     *
+     * @param id L'identifiant du patient à afficher
+     * @param model Le modèle Spring utilisé pour transmettre des données à la vue
+     * @return Le nom de la vue à afficher
+     */
     @GetMapping("/patients/{id}")
     public String viewPatient(@PathVariable("id") int id, Model model) {
         String patientUrl = apiGatewayUrl + "/patients/" + id;
@@ -168,6 +188,14 @@ public class PatientUiController {
         }
         return "patient-details";
     }
+
+    /**
+     * Affiche le formulaire d'édition pour un patient existant.
+     *
+     * @param id L'identifiant du patient à modifier
+     * @param model Le modèle Spring utilisé pour transmettre des données à la vue
+     * @return Le nom de la vue à afficher ou une redirection
+     */
     @GetMapping("/patients/edit/{id}")
     public String showEditPatientForm(@PathVariable("id") int id, Model model) {
         String url = apiGatewayUrl + "/patients/" + id;
@@ -202,14 +230,29 @@ public class PatientUiController {
             return "redirect:/ui/patients";
         }
     }
+
+    /**
+     * Affiche le formulaire d'ajout d'un nouveau patient.
+     *
+     * @param model Le modèle Spring utilisé pour transmettre des données à la vue
+     * @return Le nom de la vue à afficher
+     */
     @GetMapping("/patients/add")
     public String showAddPatientForm(Model model) {
-
         // Crée un objet Patient vide pour le binding du formulaire
         model.addAttribute("patient", new Patient(0, "", "", "", "", "", ""));
         return "add-patient-form";
     }
 
+
+    /**
+     * Affiche le formulaire d'ajout d'une nouvelle note pour un patient spécifique.
+     * Récupère automatiquement le nom du patient pour pré-remplir le formulaire.
+     *
+     * @param patId L'identifiant du patient associé à la note
+     * @param model Le modèle Spring utilisé pour transmettre des données à la vue
+     * @return Le nom de la vue à afficher
+     */
     @GetMapping("/notes/add")
     public String showAddNoteForm(@RequestParam("patId") Integer patId, Model model) {
         String patientName = "Inconnu";
@@ -248,6 +291,14 @@ public class PatientUiController {
         return "add-note-form";
     }
 
+    /**
+     * Traite la soumission du formulaire d'ajout de patient.
+     * Envoie les données au service backend et redirige l'utilisateur en fonction du résultat.
+     *
+     * @param patient Les données du patient à sauvegarder
+     * @param redirectAttributes Attributs pour transmettre des messages lors de la redirection
+     * @return Une redirection vers une vue appropriée en fonction du résultat
+     */
     @PostMapping("/patients/save")
     public String savePatient(@ModelAttribute("patient") Patient patient, RedirectAttributes redirectAttributes) {
         String url = apiGatewayUrl + "/patients";
@@ -288,6 +339,16 @@ public class PatientUiController {
 
         }
     }
+
+    /**
+     * Traite la soumission du formulaire de mise à jour d'un patient existant.
+     * Vérifie la cohérence des identifiants et envoie les données au service backend.
+     *
+     * @param id L'identifiant du patient à mettre à jour
+     * @param patient Les données du patient à mettre à jour
+     * @param redirectAttributes Attributs pour transmettre des messages lors de la redirection
+     * @return Une redirection vers une vue appropriée en fonction du résultat
+     */
     @PostMapping("/patients/update/{id}")
     public String updatePatient(@PathVariable("id") int id, @ModelAttribute("patient") Patient patient, RedirectAttributes redirectAttributes) {
         if (patient.id() == null || patient.id() != id) {
@@ -334,6 +395,15 @@ public class PatientUiController {
             return "redirect:/ui/patients/edit/" + id;
         }
     }
+
+    /**
+     * Supprime un patient existant avec ces notes associées.
+     * Envoie une demande de suppression au service backend et redirige l'utilisateur avec un message approprié.
+     *
+     * @param id L'identifiant du patient à supprimer
+     * @param redirectAttributes Attributs pour transmettre des messages lors de la redirection
+     * @return Une redirection vers la liste des patients
+     */
     @PostMapping("/patients/delete/{id}")
     public String deletePatient(@PathVariable("id") int id, RedirectAttributes redirectAttributes) {
         log.info("Requête pour supprimer le patient ID: {}", id);
@@ -371,6 +441,14 @@ public class PatientUiController {
         return "redirect:/ui/patients";
     }
 
+    /**
+     * Traite la soumission du formulaire d'ajout de note.
+     * Valide les données de base et envoie la nouvelle note au service backend.
+     *
+     * @param note Les données de la note à sauvegarder
+     * @param redirectAttributes Attributs pour transmettre des messages lors de la redirection
+     * @return Une redirection vers la page de détail du patient ou vers le formulaire de note
+     */
     @PostMapping("/notes/save")
     public String saveNote(@ModelAttribute("note") Note note,
                            RedirectAttributes redirectAttributes) {

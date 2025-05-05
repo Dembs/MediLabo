@@ -24,6 +24,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Classe d'évaluation du risque de diabète.
+ * Elle implémente la logique métier pour évaluer le niveau de risque de diabète
+ * d'un patient en fonction de son âge, son genre et des termes médicaux présents
+ * dans ses notes médicales.
+ */
 @Service
 public class DiabetesService {
 
@@ -40,11 +46,16 @@ public class DiabetesService {
     @Autowired
     public DiabetesService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-
     }
 
+    /**
+     * Evalue le risque de diabète d'un patient en récupérant les données du patient,
+     * ses notes médicales, en comptant les déclencheurs et en appliquant les règles métier.
+     *
+     * @param patientId Identifiant du patient à évaluer
+     * @return Le niveau de risque de diabète calculé (NONE, BORDERLINE, IN_DANGER ou EARLY_ONSET)
+     */
     public DiabetesRiskLevel assessDiabetesRisk(int patientId) {
-
         // Récupérer les informations du patient
         PatientDTO patient = getPatientInfo(patientId);
         if (patient == null) {
@@ -67,6 +78,12 @@ public class DiabetesService {
         return riskLevel;
     }
 
+    /**
+     * Récupère les informations d'un patient depuis le service patient.
+     *
+     * @param patientId Identifiant du patient à récupérer
+     * @return Les données du patient ou null si le patient n'existe pas ou si une erreur survient
+     */
     private PatientDTO getPatientInfo(int patientId) {
         String url = patientServiceUrl + "/" + patientId;
 
@@ -78,13 +95,17 @@ public class DiabetesService {
             return null;
         } catch (Exception e) {
             log.error("Erreur lors de la récupération des informations patient depuis {}: {}", url, e.getMessage(), e);
-
             return null;
         }
     }
 
+    /**
+     * Récupère les notes médicales d'un patient depuis le service de notes.
+     *
+     * @param patientId Identifiant du patient dont on veut récupérer les notes
+     * @return Liste des notes médicales du patient ou une liste vide si aucune note n'existe
+     */
     private List<NoteDTO> getPatientNotes(int patientId) {
-
         String url = noteServiceUrl + "/" + patientId;
 
         try {
@@ -104,6 +125,12 @@ public class DiabetesService {
         }
     }
 
+    /**
+     * Calcule l'âge d'une personne à partir de sa date de naissance.
+     *
+     * @param dateOfBirth Date de naissance de la personne
+     * @return L'âge en années ou 0 si la date de naissance est null
+     */
     private int calculateAge(LocalDate dateOfBirth) {
         if (dateOfBirth == null) {
             log.warn("Date de naissance nulle, impossible de calculer l'âge.");
@@ -112,6 +139,13 @@ public class DiabetesService {
         return Period.between(dateOfBirth, LocalDate.now()).getYears();
     }
 
+    /**
+     * Compte le nombre de termes déclencheurs uniques présents dans les notes d'un patient.
+     * Les termes déclencheurs sont définis dans DiabetesConstants.TRIGGER_TERMS.
+     *
+     * @param notes Liste des notes médicales du patient
+     * @return Le nombre de termes déclencheurs uniques trouvés
+     */
     private long countUniqueTriggers(List<NoteDTO> notes) {
         if (notes == null || notes.isEmpty()) {
             return 0;
@@ -119,7 +153,7 @@ public class DiabetesService {
 
         Set<String> foundTriggers = new HashSet<>();
 
-        // Convertir toutes les notes en une seule chaîne en minuscules pour une recherche globale (simplifie)
+        // Convertir toutes les notes en une seule chaîne en minuscules pour une recherche globale
         String allNotesContent = notes.stream()
                                       .map(NoteDTO::getNote)
                                       .filter(Objects::nonNull) // Ignorer les notes nulles
@@ -139,6 +173,14 @@ public class DiabetesService {
         return foundTriggers.size();
     }
 
+    /**
+     * Détermine le niveau de risque de diabète en fonction de l'âge, du genre et du nombre de déclencheurs.
+     *
+     * @param age Âge du patient en années
+     * @param gender Genre du patient ('M' pour masculin, 'F' pour féminin)
+     * @param triggerCount Nombre de termes déclencheurs uniques trouvés dans les notes
+     * @return Le niveau de risque de diabète déterminé selon les règles métier
+     */
     private DiabetesRiskLevel determineRiskLevel(int age, String gender, long triggerCount) {
         // Aucun risque si aucun déclencheur
         if (triggerCount == 0) {
@@ -171,6 +213,4 @@ public class DiabetesService {
         // Ou > 30 ans avec 1 seul déclencheur.
         return DiabetesRiskLevel.NONE;
     }
-
-
 }

@@ -12,20 +12,24 @@
 <!-- Le formulaire pointe vers l'URL de sauvegarde POST et utilise l'objet 'patient' du modèle -->
 <form th:action="@{/ui/patients/save}" th:object="${patient}" method="post">
     <div>
-        <label for="lastName">Nom:</label>
-        <input type="text" id="lastName" th:field="*{lastName}" required/>
+        <label for="lastName">Nom:<span style="color:red">*</span></label>
+        <input type="text" id="lastName" th:field="*{lastName}" required
+               pattern="^\S+.*$" title="Le nom de famille est obligatoire"/>
     </div>
     <div>
-        <label for="firstName">Prénom:</label>
-        <input type="text" id="firstName" th:field="*{firstName}" required/>
+        <label for="firstName">Prénom:<span style="color:red">*</span></label>
+        <input type="text" id="firstName" th:field="*{firstName}" required
+               pattern="^\S+.*$" title="Le prénom est obligatoire"/>
     </div>
     <div>
-        <label for="birthdate">Date de Naissance (YYYY-MM-DD):</label>
-        <input type="text" id="birthdate" th:field="*{birthdate}" placeholder="YYYY-MM-DD" required/>
+        <label for="birthdate">Date de Naissance (YYYY-MM-DD):<span style="color:red">*</span></label>
+        <input type="text" id="birthdate" th:field="*{birthdate}" placeholder="YYYY-MM-DD" required
+               pattern="^\d{4}-\d{2}-\d{2}$" title="Format requis: YYYY-MM-DD"/>
     </div>
     <div>
-        <label for="gender">Genre (M/F):</label>
-        <input type="text" id="gender" th:field="*{gender}" maxlength="1" required/>
+        <label for="gender">Genre (M/F):<span style="color:red">*</span></label>
+        <input type="text" id="gender" th:field="*{gender}" maxlength="1" required
+               pattern="^[MF]$" title="M pour masculin, F pour féminin"/>
     </div>
     <div>
         <label for="address">Adresse (Optionnel):</label>

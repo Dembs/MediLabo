@@ -1,7 +1,9 @@
 package com.medilabo.patient_service.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
 
@@ -10,16 +12,17 @@ import lombok.*;
 public class Patient {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @NotNull
     private int id;
 
-    @NotNull
+    @NotBlank(message = "Le nom de famille est obligatoire")
     private String lastName;
-    @NotNull
+    @NotBlank(message = "Le prénom est obligatoire")
     private String firstName;
-    @NotNull
+    @NotBlank(message = "La date de naissance est obligatoire")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Format de date incorrect (YYYY-MM-DD)")
     private String birthdate;
-    @NotNull
+    @NotBlank(message = "Le genre est obligatoire")
+    @Pattern(regexp = "^[MF]$", message = "Le genre doit être 'M' ou 'F'")
     private String gender;
     private String address;
     private String phoneNumber;

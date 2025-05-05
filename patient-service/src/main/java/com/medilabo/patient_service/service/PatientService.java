@@ -18,24 +18,31 @@ import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Collections;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 
+/**
+ * Implémentation du service de gestion des patients pour le microservice patient-service.
+ * Ce service gère les opérations CRUD (Create, Read, Update, Delete) pour les patients,
+ * ainsi que la coordination avec d'autres microservices pour maintenir la cohérence des données
+ * lors de la suppression d'un patient.
+ */
 @Service
 public class PatientService implements IPatientService {
     private final PatientRepository patientRepository;
     private final RestTemplate restTemplate;
     private static final Logger log = LoggerFactory.getLogger(PatientService.class);
+
+    /**
+     * URL de la gateway API, injectée depuis la configuration.
+     */
+    @Value("${api.gateway.url}")
+    private String apiGatewayUrl;
+
     @Autowired
     public PatientService(PatientRepository patientRepository, RestTemplate restTemplate) {
         this.patientRepository = patientRepository;
         this.restTemplate = restTemplate;
     }
-
-    @Value("${api.gateway.url}") // URL de la gateway
-    private String apiGatewayUrl;
 
     @Override
     public List<Patient> getAllPatients() {
@@ -50,10 +57,9 @@ public class PatientService implements IPatientService {
 
     @Override
     public Patient updatePatient(Patient patient, int patientId) {
-        return patientRepository.findById(patientId).map(existingPatient -> { ///Update patient except gender and birthdate
+        return patientRepository.findById(patientId).map(existingPatient -> { // Update patient except gender and birthdate
                                     existingPatient.setLastName(patient.getLastName());
                                     existingPatient.setFirstName(patient.getFirstName());
-
                                     existingPatient.setPhoneNumber(patient.getPhoneNumber());
                                     existingPatient.setAddress(patient.getAddress());
                                     return patientRepository.save(existingPatient);
@@ -66,6 +72,7 @@ public class PatientService implements IPatientService {
         return patientRepository.save(patient);
     }
 
+    @Override
     @Transactional
     public boolean deletePatient(int patientId) {
         if (!patientRepository.existsById(patientId)) {
@@ -91,15 +98,14 @@ public class PatientService implements IPatientService {
                     entity,
                     Void.class
             );
-
         }
         catch (RestClientException e) {
             log.error("Erreur RestClient [...] Le patient sera quand même supprimé.", patientId, e.getMessage());
         } catch (Exception e) {
             log.error("Erreur inattendue [...] Le patient sera quand même supprimé.", patientId, e.getMessage());
         }
-        // Supprimer le patient de la base de données locale (SQL)
 
+        // Supprimer le patient de la base de données locale (SQL)
         patientRepository.deleteById(patientId);
 
         return true;
