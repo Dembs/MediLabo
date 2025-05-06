@@ -1,0 +1,132 @@
+services:
+  # Base de données MongoDB
+  mongo:
+    image: mongo:latest
+    container_name: medilabo-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - medilabo-network
+
+  # Base de Données MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: medilabo-mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: medilabo_patient
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - medilabo-network
+
+  # Microservice Patient
+  patient-service:
+    build:
+      context: ./patient-service
+      dockerfile: Dockerfile
+    image: medilabo/patient-service:latest
+    container_name: medilabo-patient-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/medilabo_patient?serverTimezone=UTC
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      # Configuration JPA/SQL Init
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: true
+      SPRING_SQL_INIT_MODE: always
+      SPRING_SQL_INIT_DATA_LOCATIONS: classpath:data.sql
+    networks:
+      - medilabo-network
+    depends_on:
+      - mysql
+
+
+  # Microservice Notes
+  notes-service:
+    build:
+      context: ./notes-service
+      dockerfile: Dockerfile
+    image: medilabo/notes-service:latest
+    container_name: medilabo-notes-service
+    ports:
+      - "7070:7070"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/notes
+    networks:
+      - medilabo-network
+    depends_on:
+      - mongo
+
+  # Microservice Évaluation Diabète
+  diabetes-service:
+    build:
+      context: ./diabetes-service
+      dockerfile: Dockerfile
+    image: medilabo/diabetes-service:latest
+    container_name: medilabo-diabetes-service
+    ports:
+      - "8084:8084"
+    environment:
+      # URLs pour appeler les autres services via la gateway
+      PATIENT_SERVICE_URL: http://api-gateway:8080/patients
+      NOTE_SERVICE_URL: http://api-gateway:8080/notes
+      # Authentifier  gateway
+      GATEWAY_AUTH_USERNAME: ${GATEWAY_USER}
+      GATEWAY_AUTH_PASSWORD: ${GATEWAY_PASSWORD}
+    networks:
+      - medilabo-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    image: medilabo/api-gateway:latest
+    container_name: medilabo-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_SECURITY_USER_NAME: ${GATEWAY_USER}
+      SPRING_SECURITY_USER_PASSWORD: ${GATEWAY_PASSWORD}
+
+    networks:
+      - medilabo-network
+    depends_on:
+      - patient-service
+      - notes-service
+      - diabetes-service
+
+  # Front End
+  front-end:
+    build:
+      context: ./front-end
+      dockerfile: Dockerfile
+    image: medilabo/front-end:latest
+    container_name: medilabo-front-end
+    ports:
+      - "8082:8082"
+    environment:
+      API_GATEWAY_URL: http://api-gateway:8080
+      BACKEND_API_USERNAME: ${GATEWAY_USER}
+      BACKEND_API_PASSWORD: ${GATEWAY_PASSWORD}
+      SERVER_PORT: 8082
+    networks:
+      - medilabo-network
+    depends_on:
+      - api-gateway
+
+networks:
+  medilabo-network:
+    driver: bridge # Type de réseau par défaut
+
+volumes:
+  mongo_data:
+  mysql_data:

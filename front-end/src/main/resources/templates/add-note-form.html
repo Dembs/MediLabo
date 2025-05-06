@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajouter une Note</title>
+</head>
+<body>
+
+<h1>Ajouter une Note pour le Patient ID: <span th:text="${patId}">ID Patient</span></h1>
+
+<div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+
+<form th:action="@{/ui/notes/save}" th:object="${note}" method="post">
+
+    <!-- Champ caché pour conserver l'ID du patient -->
+    <input type="hidden" th:field="*{patId}" />
+    <input type="hidden" th:field="*{patient}" />
+
+    <div>
+        <!--<label for="noteContent">Note du Praticien :</label>-->
+        <textarea id="noteContent" th:field="*{note}" rows="6" required placeholder="Saisissez vos observations ici..."></textarea>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit">Enregistrer la Note</button>
+        <a th:href="@{/ui/patients/{id}(id=${patId})}">Annuler</a>
+    </div>
+</form>
+
+
+</body>
+</html>

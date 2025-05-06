@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails Patient - MediLabo Solutions</title>
+    <!-- Intégration de Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Intégration des icônes Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f8f9fa; }
+        .navbar { background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 1rem 0; }
+        .navbar-brand { color: #0d6efd; font-weight: 600; font-size: 1.5rem; }
+        .nav-link { color: #6c757d; }
+        .nav-link.active { color: #0d6efd; font-weight: 500; }
+        .container { margin-top: 2rem; max-width: 960px; }
+
+        .page-header { margin-bottom: 2rem; }
+        .page-header h1 { font-size: 1.75rem; font-weight: 600; }
+        .page-header .text-muted { font-size: 0.95rem; }
+        .btn-back { color: #6c757d; text-decoration: none; margin-right: 1rem; }
+        .btn-back:hover { color: #0d6efd; }
+        .action-buttons .btn { margin-left: 0.5rem; }
+        .nav-tabs { border-bottom: 1px solid #dee2e6; margin-bottom: 1.5rem; }
+        .nav-tabs .nav-link { border: none; border-bottom: 2px solid transparent; color: #6c757d; }
+        .nav-tabs .nav-link.active { border-bottom-color: #0d6efd; color: #0d6efd; font-weight: 500; }
+        .card { border: none; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,.05); margin-bottom: 1.5rem; }
+        .card-body { padding: 1.5rem; }
+        .info-section dt { font-weight: 500; color: #6c757d; margin-bottom: 0.25rem; }
+        .info-section dd { margin-bottom: 1rem; color: #212529; }
+        .risk-tag-header { position: absolute; top: 1.5rem; right: 1.5rem; }
+
+        .tag { display: inline-block; padding: 0.3rem 0.6rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 500; }
+        .tag-none { background-color: #e9f5ec; color: #198754; }
+        .tag-limit { background-color: #fff3cd; color: #ffc107; }
+        .tag-danger { background-color: #f8d7da; color: #dc3545; }
+        .tag-early { background-color: #f8d7da; color: #dc3545; font-weight: 600; }
+
+        .notes-list ul { list-style: none; padding-left: 0; }
+        .notes-list li { background-color: #f8f9fa; border-radius: 4px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #e9ecef; }
+        .notes-list .note-date { font-size: 0.85rem; color: #6c757d; margin-bottom: 0.5rem; display: block; }
+        .note-content { white-space: pre-wrap; }
+
+        #noteContent { width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; }
+        .form-actions { margin-top: 1rem; text-align: right; }
+        .form-actions .btn-secondary { margin-left: 0.5rem; }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container">
+        <a class="navbar-brand" href="/ui/patients">MediLabo Solutions</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <form th:action="@{/logout}" method="post" class="ms-auto">
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Déconnexion</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<!-- Content -->
+<div class="container">
+
+    <!-- Messages de succès/erreur -->
+    <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage != null and not #strings.contains(errorMessage, 'Patient non trouvé')}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
+    <!-- Message spécifique si patient non trouvé -->
+    <div th:if="${errorMessage != null and #strings.contains(errorMessage, 'Patient non trouvé')}" class="alert alert-warning" role="alert">
+        <p th:text="${errorMessage}">Patient non trouvé.</p>
+        <a th:href="@{/ui/patients}" class="alert-link">Retour à la liste des patients</a>
+    </div>
+
+    <!-- Affichage seulement si patient trouvé -->
+    <div th:if="${patient != null and (errorMessage == null or not #strings.contains(errorMessage, 'Patient non trouvé'))}">
+        <!-- Header de la page -->
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <a th:href="@{/ui/patients}" class="btn-back me-3" title="Retour à la liste">
+                    <i class="bi bi-arrow-left fs-4"></i>
+                </a>
+                <div>
+                    <h1 class="mb-0" th:text="${patient.firstName + ' ' + patient.lastName}">Dupont Jean</h1>
+                    <p class="text-muted mb-0">Détails du patient et historique médical</p>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <a th:href="@{/ui/patients/edit/{id}(id=${patient.id})}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-pencil"></i> Modifier
+                </a>
+                <form th:action="@{/ui/patients/delete/{id}(id=${patient.id})}" method="post" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce patient et toutes ses notes associées ?');">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash"></i> Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Onglets -->
+        <ul class="nav nav-tabs" id="patientTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info-tab-pane" type="button" role="tab" aria-controls="info-tab-pane" aria-selected="true">
+                    <i class="bi bi-person-lines-fill me-1"></i> Informations
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes-tab-pane" type="button" role="tab" aria-controls="notes-tab-pane" aria-selected="false">
+                    <i class="bi bi-journal-text me-1"></i> Notes (<span th:text="${patientNotes != null ? #lists.size(patientNotes) : 0}">2</span>)
+                </button>
+            </li>
+        </ul>
+
+        <!-- Contenu des onglets -->
+        <div class="tab-content" id="patientTabContent">
+            <!-- Onglet Informations Personnelles -->
+            <div class="tab-pane fade show active" id="info-tab-pane" role="tabpanel" aria-labelledby="info-tab" tabindex="0">
+                <div class="card">
+                    <div class="card-body position-relative">
+                        <!-- Tag de risque en haut à droite -->
+                        <span th:switch="${diabetesRisk}" class="tag risk-tag-header">
+                                <span th:case="'NONE'" class="tag tag-none">Aucun risque</span>
+                                <span th:case="'BORDERLINE'" class="tag tag-limit">Limite</span>
+                                <span th:case="'IN_DANGER'" class="tag tag-danger">En danger</span>
+                                <span th:case="'EARLY_ONSET'" class="tag tag-early">Début précoce</span>
+                                <span th:case="*" th:text="${diabetesRisk ?: 'N/A'}">N/A</span>
+                            </span>
+
+                        <h5 class="card-title">Informations personnelles</h5>
+                        <dl class="row info-section">
+                            <dt class="col-sm-3">Nom complet</dt>
+                            <dd class="col-sm-9" th:text="${patient.firstName + ' ' + patient.lastName}">Dupont Jean</dd>
+
+                            <dt class="col-sm-3">Genre</dt>
+                            <dd class="col-sm-9">
+                                <span th:if="${#strings.equalsIgnoreCase(patient.gender, 'M')}">Homme</span>
+                                <span th:if="${#strings.equalsIgnoreCase(patient.gender, 'F')}">Femme</span>
+                            </dd>
+
+                            <dt class="col-sm-3">Date de naissance</dt>
+                            <dd class="col-sm-9">
+                                <span th:if="${patient.birthdate}" th:text="${#strings.replace(patient.birthdate, '-', '/')}">15/05/1975</span>
+                                <span th:if="${patientAge != null}" th:text="${' (' + patientAge + ' ans)'}">(49 ans)</span>
+                            </dd>
+
+                            <dt class="col-sm-3">Téléphone</dt>
+                            <dd class="col-sm-9" th:text="${patient.phoneNumber ?: 'Non renseigné'}">01 23 45 67 89</dd>
+
+                            <dt class="col-sm-3">Adresse</dt>
+                            <dd class="col-sm-9" th:text="${patient.address ?: 'Non renseignée'}">123 Rue de Paris, 75001 Paris</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Section Évaluation Risque -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Évaluation du risque de diabète</h5>
+                        <p class="text-muted">Basée sur l'historique médical et les facteurs de risque.</p>
+                        <p class="mb-0">
+                            Niveau de risque actuel :
+                            <strong th:switch="${diabetesRisk}">
+                                <span th:case="'NONE'" class="tag tag-none">Aucun risque</span>
+                                <span th:case="'BORDERLINE'" class="tag tag-limit">Limite</span>
+                                <span th:case="'IN_DANGER'" class="tag tag-danger">En danger</span>
+                                <span th:case="'EARLY_ONSET'" class="tag tag-early">Début précoce</span>
+                                <span th:case="*" th:text="${diabetesRisk ?: 'N/A'}">N/A</span>
+                            </strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Notes -->
+            <div class="tab-pane fade" id="notes-tab-pane" role="tabpanel" aria-labelledby="notes-tab" tabindex="0">
+                <!-- Formulaire Ajout Note -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Ajouter une note</h5>
+                        <p class="text-muted">Enregistrez une nouvelle observation médicale</p>
+                        <form th:action="@{/ui/notes/save}" method="post">
+                            <input type="hidden" name="patId" th:value="${patient.id}" />
+                            <!-- Envoyer le nom de famille comme champ 'patient'-->
+                            <input type="hidden" name="patient" th:value="${patient.lastName}" />
+                            <div class="mb-3">
+                                <textarea id="noteContent" name="note" rows="4" class="form-control" required placeholder="Saisissez votre note médicale ici..."></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary btn-sm">Enregistrer la note</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Historique des notes -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Historique des notes</h5>
+                        <p class="text-muted">Notes médicales classées par date </p>
+                        <div th:if="${noteErrorMessage}" class="alert alert-warning" role="alert" th:text="${noteErrorMessage}"></div>
+                        <div th:if="${patientNotes == null or #lists.isEmpty(patientNotes) and noteErrorMessage == null}">
+                            <p class="text-center text-muted">Aucune note enregistrée pour ce patient.</p>
+                        </div>
+                        <div class="notes-list" th:if="${patientNotes != null and not #lists.isEmpty(patientNotes)}">
+                            <ul>
+                                <li th:each="note : ${patientNotes}">
+                                    <!-- Ajouter la date ici si disponible depuis l'API notes -->
+                                    <!-- <span class="note-date">Date manquante</span> -->
+                                    <p class="note-content" th:text="${note.note}">Contenu de la note...</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!-- Fin div th:if patient != null -->
+
+</div> <!-- Fin container -->
+
+<!-- Intégration de Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patients - MediLabo Solutions</title>
+    <!-- Intégration de Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Intégration des icônes Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f8f9fa; }
+        .navbar { background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,.1); padding: 1rem 0; }
+        .navbar-brand { color: #0d6efd; font-weight: 600; font-size: 1.5rem; }
+        .nav-link { color: #6c757d; }
+        .nav-link.active { color: #0d6efd; font-weight: 500; }
+        .container { margin-top: 2rem; max-width: 1140px; } /* Ajusté la largeur max */
+        .page-header { margin-bottom: 2rem; }
+        .page-header h1 { font-size: 2rem; font-weight: 600; }
+        .page-header p { color: #6c757d; }
+        .card { border: none; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,.05); margin-bottom: 2rem; }
+        .card-title { font-size: 1.25rem; font-weight: 500; margin-bottom: 1.5rem; }
+        .btn-primary { background-color: #0d6efd; border-color: #0d6efd; font-weight: 500; }
+        .btn-primary:hover { background-color: #0b5ed7; border-color: #0a58ca; }
+        .table { margin-bottom: 0; }
+        .table thead th { border-bottom-width: 1px; color: #6c757d; font-weight: 500; font-size: 0.875rem; text-transform: uppercase; border-top: none; }
+        .table tbody tr td { vertical-align: middle; }
+        .table tbody tr:hover { background-color: #f8f9fa; }
+        .patient-name-link { color: #212529; text-decoration: none; font-weight: 500; }
+        .patient-name-link:hover { color: #0d6efd; }
+        .tag { display: inline-block; padding: 0.3rem 0.6rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 500; }
+        .tag-none { background-color: #e9f5ec; color: #198754; }
+        .tag-limit { background-color: #fff3cd; color: #ffc107; }
+        .tag-danger { background-color: #f8d7da; color: #dc3545; }
+        .tag-early { background-color: #f8d7da; color: #dc3545; font-weight: 600; }
+        .action-buttons a, .action-buttons button { color: #6c757d; padding: 0.25rem 0.5rem; }
+        .action-buttons a:hover, .action-buttons button:hover { color: #0d6efd; }
+        .action-buttons form { display: inline; }
+        .action-buttons button { background: none; border: none; }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container">
+        <a class="navbar-brand" href="/ui/patients">MediLabo Solutions</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <form th:action="@{/logout}" method="post" class="ms-auto">
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Déconnexion</button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<!-- Content -->
+<div class="container">
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+            <h1>Patients</h1>
+            <p class="text-muted mb-0">Gérez vos patients et consultez leurs informations</p>
+        </div>
+        <a th:href="@{/ui/patients/add}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nouveau patient
+        </a>
+    </div>
+
+    <!-- Messages de succès/erreur -->
+    <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
+
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">Liste des patients</h2>
+
+            <!-- Affichage si aucun patient -->
+            <div th:if="${patients == null or #lists.isEmpty(patients)}">
+                <p class="text-center text-muted">Aucun patient trouvé.</p>
+            </div>
+
+            <!-- Tableau des patients -->
+            <div th:if="${patients != null and not #lists.isEmpty(patients)}" class="table-responsive">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="col-3 text-center">Nom</th>
+                        <th scope="col" class="col-2 text-center">Date de naissance</th>
+                        <th scope="col" class="col-1 text-center">Âge</th>
+                        <th scope="col" class="col-1 text-center">Genre</th>
+                        <th scope="col" class="col-3 text-center">Risque</th>
+                        <th scope="col" class="col-2 text-center">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="patient : ${patients}">
+                        <td class="text-center">
+                            <a th:href="@{/ui/patients/{id}(id=${patient.id})}" class="patient-name-link">
+                                <span th:text="${patient.lastName + ' ' + patient.firstName}">Nom complet</span>
+                            </a>
+                        </td>
+                        <td th:text="${#strings.length(patient.birthdate) == 10 ? #strings.replace(patient.birthdate, '-', '/') : patient.birthdate}">15/05/1975</td>
+                        <!-- Afficher l'âge calculé -->
+                        <td class="text-center">
+                            <span th:if="${patient.age != null}" th:text="${patient.age + ' ans'}">49 ans</span>
+                            <span th:unless="${patient.age != null}">N/A</span>
+                        </td>
+                        <td class="text-center">
+                            <!-- Affichage Genre -->
+                            <span th:if="${#strings.equalsIgnoreCase(patient.gender, 'M')}">Homme</span>
+                            <span th:if="${#strings.equalsIgnoreCase(patient.gender, 'F')}">Femme</span>
+                            <span th:unless="${#strings.equalsIgnoreCase(patient.gender, 'M') or #strings.equalsIgnoreCase(patient.gender, 'F')}" th:text="${patient.gender}"></span>
+                        </td>
+                        <td class="text-center">
+                            <!-- Affichage du risque -->
+                            <span th:switch="${patient.riskLevel}">
+                                    <span th:case="'NONE'" class="tag tag-none">Aucun risque</span>
+                                    <span th:case="'BORDERLINE'" class="tag tag-limit">Limite</span>
+                                    <span th:case="'IN_DANGER'" class="tag tag-danger">En danger</span>
+                                    <span th:case="'EARLY_ONSET'" class="tag tag-early">Début précoce</span>
+                                    <span th:case="*" class="tag" th:text="${patient.riskLevel ?: 'N/A'}">N/A</span>
+                                </span>
+                        </td>
+                        <td class="action-buttons text-center">
+                            <!-- Boutons d'action -->
+                            <a th:href="@{/ui/patients/edit/{id}(id=${patient.id})}" title="Modifier">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <form th:action="@{/ui/patients/delete/{id}(id=${patient.id})}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce patient ?');">
+                                <button type="submit" title="Supprimer">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Intégration de Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
