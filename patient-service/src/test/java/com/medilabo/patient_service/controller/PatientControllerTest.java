@@ -11,6 +11,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -40,9 +41,9 @@ public class PatientControllerTest {
     @BeforeEach
     void setUp() {
 
-        patient1 = new Patient("Dupont", "Jean", "1980-01-15", "M", "1 Rue Test", "111-222-3333");
+        patient1 = new Patient("Dupont", "Jean", LocalDate.parse("1980-01-15"), "M", "1 Rue Test", "111-222-3333");
         patient1.setId(1);
-        patient2 = new Patient("Durand", "Marie", "1990-05-20", "F", "2 Avenue Essai", "444-555-6666");
+        patient2 = new Patient("Durand", "Marie", LocalDate.parse("1990-05-20"), "F", "2 Avenue Essai", "444-555-6666");
         patient2.setId(2);
     }
 
@@ -92,7 +93,7 @@ public class PatientControllerTest {
 
     @Test
     void updatePatientTest() throws Exception {
-        Patient updatedInfo = new Patient("Dupont", "Jean-Pierre", "1980-01-15", "M", "1 Rue Test Modifiée", "111-222-4444");
+        Patient updatedInfo = new Patient("Dupont", "Jean-Pierre", LocalDate.parse("1980-01-15"), "M", "1 Rue Test Modifiée", "111-222-4444");
         when(patientService.updatePatient(any(Patient.class), eq(1))).thenReturn(patient1);
 
 

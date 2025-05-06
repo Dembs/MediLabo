@@ -1,10 +1,13 @@
 package com.medilabo.patient_service.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
+
+import java.time.LocalDate;
 
 
 @Entity
@@ -18,9 +21,8 @@ public class Patient {
     private String lastName;
     @NotBlank(message = "Le prénom est obligatoire")
     private String firstName;
-    @NotBlank(message = "La date de naissance est obligatoire")
-    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Format de date incorrect (YYYY-MM-DD)")
-    private String birthdate;
+    @NotNull(message = "La date de naissance est obligatoire")
+    private LocalDate birthdate;
     @NotBlank(message = "Le genre est obligatoire")
     @Pattern(regexp = "^[MF]$", message = "Le genre doit être 'M' ou 'F'")
     private String gender;
@@ -28,7 +30,7 @@ public class Patient {
     private String phoneNumber;
 
     public Patient(){}
-    public Patient(String lastName, String firstName, String birthdate, String gender, String address, String phoneNumber) {
+    public Patient(String lastName, String firstName, LocalDate birthdate, String gender, String address, String phoneNumber) {
         this.lastName = lastName;
         this.firstName = firstName;
         this.birthdate = birthdate;
@@ -61,11 +63,11 @@ public class Patient {
         this.firstName = firstName;
     }
 
-    public String getBirthdate() {
+    public LocalDate getBirthdate() {
         return birthdate;
     }
 
-    public void setBirthdate(String birthdate) {
+    public void setBirthdate(LocalDate birthdate) {
         this.birthdate = birthdate;
     }
 

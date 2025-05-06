@@ -1,5 +1,6 @@
 package com.medilabo.front_end.controller;
 
+import com.medilabo.front_end.model.PatientListDTO;
 import com.medilabo.front_end.model.Note;
 import com.medilabo.front_end.model.Patient;
 import org.slf4j.Logger;
@@ -11,15 +12,21 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Contrôleur d'interface utilisateur pour la gestion des patients et leurs notes associées.
@@ -45,6 +52,56 @@ public class PatientUiController {
     private String backendApiPassword;
 
     /**
+     * Calcule l'âge à partir d'une date de naissance au format String (YYYY-MM-DD).
+     * @param birthdateString La date de naissance en String.
+     * @return L'âge en années, ou null si la date est invalide.
+     */
+    private Integer calculateAge(String birthdateString) {
+        if (birthdateString == null || birthdateString.isBlank()) {
+            return null;
+        }
+        try {
+            LocalDate birthDate = LocalDate.parse(birthdateString, DateTimeFormatter.ISO_LOCAL_DATE);
+            return Period.between(birthDate, LocalDate.now()).getYears();
+        } catch (DateTimeParseException e) {
+            log.warn("Format de date invalide pour le calcul de l'âge : {}", birthdateString);
+            return null;
+        }
+    }
+
+    /**
+     * Récupère le niveau de risque de diabète pour un patient.
+     * @param patientId L'ID du patient.
+     * @param entity L'entité HTTP avec les en-têtes d'authentification.
+     * @return Le niveau de risque en String, ou "N/A" en cas d'erreur.
+     */
+    private String getDiabetesRiskLevel(int patientId, HttpEntity<String> entity) {
+        String diabetesUrl = apiGatewayUrl + "/diabetes/" + patientId;
+        try {
+            ResponseEntity<String> diabetesResponse = restTemplate.exchange(
+                    diabetesUrl,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+            if (diabetesResponse.getStatusCode() == HttpStatus.OK && diabetesResponse.getBody() != null) {
+                return diabetesResponse.getBody();
+            } else {
+                log.warn("Réponse non OK pour le risque diabète du patient ID {}: {}", patientId, diabetesResponse.getStatusCode());
+                return "N/A";
+            }
+        } catch (HttpClientErrorException e) {
+            log.error("Erreur client lors de la récupération du risque diabète pour patient ID {}: {} {}", patientId, e.getStatusCode(), e.getResponseBodyAsString());
+            return "Erreur API";
+        } catch (RestClientException e) {
+            log.error("Erreur RestClient lors de la récupération du risque diabète pour patient ID {}: {}", patientId, e.getMessage());
+            return "Erreur API";
+        } catch (Exception e) {
+            log.error("Erreur inattendue lors de l'appel à l'évaluation diabète pour ID {}", patientId, e);
+            return "Erreur";
+        }
+    }
+    /**
      * Récupère et affiche la liste de tous les patients.
      *
      * @param model Le modèle Spring utilisé pour transmettre des données à la vue
@@ -53,7 +110,8 @@ public class PatientUiController {
     @GetMapping("/patients")
     public String listPatients(Model model) {
 
-        String url = apiGatewayUrl + "/patients";
+        String patientsUrl = apiGatewayUrl + "/patients";
+        List<PatientListDTO> patientListForView = new ArrayList<>();
 
         try {
             // Création de l'en-tête d'authentification Basic
@@ -69,14 +127,32 @@ public class PatientUiController {
 
             // Appel à l'API via RestTemplate
             ResponseEntity<List<Patient>> response = restTemplate.exchange(
-                    url,
+                    patientsUrl,
                     HttpMethod.GET,
                     entity,
                     new ParameterizedTypeReference<List<Patient>>() {}
             );
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                model.addAttribute("patients", response.getBody());
+                List<Patient> patients = response.getBody();
+
+                // Pour chaque patient, calculer l'âge et récupérer le risque
+                patientListForView = patients.stream().map(patient -> {
+                    Integer age = calculateAge(patient.birthdate());
+                    String riskLevel = getDiabetesRiskLevel(patient.id(), entity);
+
+                    return new PatientListDTO(
+                            patient.id(),
+                            patient.lastName(),
+                            patient.firstName(),
+                            patient.birthdate(),
+                            patient.gender(),
+                            age,
+                            riskLevel
+                    );
+                }).collect(Collectors.toList());
+
+                model.addAttribute("patients", patientListForView);
             } else {
                 log.warn("Réponse non OK reçue de l'API Gateway : {}", response.getStatusCode());
                 model.addAttribute("errorMessage", "Impossible de récupérer la liste des patients. Statut : " + response.getStatusCode());
@@ -127,6 +203,8 @@ public class PatientUiController {
             if (patientResponse.getStatusCode() == HttpStatus.OK && patientResponse.getBody() != null) {
                 model.addAttribute("patient", patientResponse.getBody());
                 patientFound = true;
+                Integer age = calculateAge(patientResponse.getBody().birthdate());
+                model.addAttribute("patientAge", age);
             } else {
                 log.warn("Patient ID {} non trouvé ou erreur API (Patient): {}", id, patientResponse.getStatusCode());
                 model.addAttribute("errorMessage", "Patient non trouvé (Code: " + patientResponse.getStatusCode() + ")");

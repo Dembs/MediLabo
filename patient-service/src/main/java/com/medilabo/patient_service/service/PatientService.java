@@ -57,9 +57,11 @@ public class PatientService implements IPatientService {
 
     @Override
     public Patient updatePatient(Patient patient, int patientId) {
-        return patientRepository.findById(patientId).map(existingPatient -> { // Update patient except gender and birthdate
+        return patientRepository.findById(patientId).map(existingPatient -> {
                                     existingPatient.setLastName(patient.getLastName());
                                     existingPatient.setFirstName(patient.getFirstName());
+                                    existingPatient.setBirthdate(patient.getBirthdate());
+                                    existingPatient.setGender(patient.getGender());
                                     existingPatient.setPhoneNumber(patient.getPhoneNumber());
                                     existingPatient.setAddress(patient.getAddress());
                                     return patientRepository.save(existingPatient);

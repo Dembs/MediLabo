@@ -20,6 +20,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -43,9 +44,9 @@ public class PatientServiceTest {
 
     @BeforeEach
     void setUp() {
-        patient1 = new Patient("Dupont", "Jean", "1980-01-15", "M", "1 Rue Test", "111-222-3333");
+        patient1 = new Patient("Dupont", "Jean", LocalDate.parse("1980-01-15"), "M", "1 Rue Test", "111-222-3333");
         patient1.setId(1);
-        patient2 = new Patient("Durand", "Marie", "1990-05-20", "F", "2 Avenue Essai", "444-555-6666");
+        patient2 = new Patient("Durand", "Marie", LocalDate.parse("1990-05-20"), "F", "2 Avenue Essai", "444-555-6666");
         patient2.setId(2);
 
         ReflectionTestUtils.setField(patientService, "apiGatewayUrl", "http://fake-gateway:8080");
@@ -83,7 +84,7 @@ public class PatientServiceTest {
 
         when(patientRepository.save(any(Patient.class))).thenReturn(patient1);
 
-        Patient newPatient = new Patient("Test", "Nouveau", "2000-10-10", "M", "Adresse", "000");
+        Patient newPatient = new Patient("Test", "Nouveau", LocalDate.parse("2000-10-10"), "M", "Adresse", "000");
         Patient savedPatient = patientService.createPatient(newPatient);
 
         assertNotNull(savedPatient);
@@ -93,8 +94,8 @@ public class PatientServiceTest {
 
     @Test
     void updatePatientTest() {
-        Patient updatedInfo = new Patient("Dupont", "Jean-Pierre", "1980-01-15", "M", "Nouvelle Adresse", "999-888-7777");
-        Patient patientExistantAvecUpdate = new Patient("Dupont", "Jean-Pierre", "1980-01-15", "M", "Nouvelle Adresse", "999-888-7777");
+        Patient updatedInfo = new Patient("Dupont", "Jean-Pierre", LocalDate.parse("1980-01-15"), "M", "Nouvelle Adresse", "999-888-7777");
+        Patient patientExistantAvecUpdate = new Patient("Dupont", "Jean-Pierre", LocalDate.parse("1980-01-15"), "M", "Nouvelle Adresse", "999-888-7777");
         patientExistantAvecUpdate.setId(1);
 
         when(patientRepository.findById(1)).thenReturn(Optional.of(patient1));
