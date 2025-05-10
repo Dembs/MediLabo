@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 @RequestMapping("/ui")
+
 public class PatientUiController {
 
     private static final Logger log = LoggerFactory.getLogger(PatientUiController.class);

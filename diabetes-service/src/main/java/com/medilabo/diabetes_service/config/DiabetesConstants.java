@@ -29,7 +29,7 @@ public final class DiabetesConstants {
             "anormal",
             "cholestérol",
             "vertiges",
-            "vertiges",
+            "vertige",
             "rechute",
             "réaction",
             "réactions",

@@ -4,9 +4,8 @@ import com.medilabo.patient_service.model.Patient;
 import com.medilabo.patient_service.repository.PatientRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -27,22 +26,18 @@ import java.util.List;
  * lors de la suppression d'un patient.
  */
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class PatientService implements IPatientService {
     private final PatientRepository patientRepository;
     private final RestTemplate restTemplate;
-    private static final Logger log = LoggerFactory.getLogger(PatientService.class);
+
 
     /**
      * URL de la gateway API, injectée depuis la configuration.
      */
     @Value("${api.gateway.url}")
     private String apiGatewayUrl;
-
-    @Autowired
-    public PatientService(PatientRepository patientRepository, RestTemplate restTemplate) {
-        this.patientRepository = patientRepository;
-        this.restTemplate = restTemplate;
-    }
 
     @Override
     public List<Patient> getAllPatients() {

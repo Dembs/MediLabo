@@ -4,16 +4,12 @@ import com.medilabo.diabetes_service.config.DiabetesConstants;
 import com.medilabo.diabetes_service.dto.NoteDTO;
 import com.medilabo.diabetes_service.dto.PatientDTO;
 import com.medilabo.diabetes_service.enums.DiabetesRiskLevel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import com.medilabo.diabetes_service.proxies.NoteProxy;
+import com.medilabo.diabetes_service.proxies.PatientProxy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -31,22 +27,13 @@ import java.util.stream.Collectors;
  * dans ses notes médicales.
  */
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class DiabetesService {
 
-    private static final Logger log = LoggerFactory.getLogger(DiabetesService.class);
+    private final PatientProxy patientProxy;
+    private final NoteProxy noteProxy;
 
-    private final RestTemplate restTemplate;
-
-    @Value("${patient.service.url}")
-    private String patientServiceUrl;
-
-    @Value("${note.service.url}")
-    private String noteServiceUrl;
-
-    @Autowired
-    public DiabetesService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
 
     /**
      * Evalue le risque de diabète d'un patient en récupérant les données du patient,
@@ -85,16 +72,15 @@ public class DiabetesService {
      * @return Les données du patient ou null si le patient n'existe pas ou si une erreur survient
      */
     private PatientDTO getPatientInfo(int patientId) {
-        String url = patientServiceUrl + "/" + patientId;
+
 
         try {
-            ResponseEntity<PatientDTO> response = restTemplate.getForEntity(url, PatientDTO.class);
-            return response.getBody();
+            return patientProxy.getPatientById(patientId);
         } catch (HttpClientErrorException.NotFound e) {
-            log.warn("Patient non trouvé via l'URL {}: {}", url, e.getMessage());
+            log.warn("Patient non trouvé (via Feign) avec ID {}: {}", patientId, e.getMessage());
             return null;
         } catch (Exception e) {
-            log.error("Erreur lors de la récupération des informations patient depuis {}: {}", url, e.getMessage(), e);
+            log.error("Erreur lors de la récupération des informations patient (via Feign) pour ID {}: {}", patientId, e.getMessage(), e);
             return null;
         }
     }
@@ -106,21 +92,14 @@ public class DiabetesService {
      * @return Liste des notes médicales du patient ou une liste vide si aucune note n'existe
      */
     private List<NoteDTO> getPatientNotes(int patientId) {
-        String url = noteServiceUrl + "/" + patientId;
 
         try {
-            ResponseEntity<List<NoteDTO>> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<NoteDTO>>() {}
-            );
-            return response.getBody() != null ? response.getBody() : Collections.emptyList();
+            return noteProxy.getNotesByPatientId(patientId);
         } catch (HttpClientErrorException.NotFound e) {
-            log.info("Aucune note trouvée pour le patient ID {} via l'URL {}", patientId, url);
+            log.info("Aucune note trouvée (via Feign) pour le patient ID {}", patientId);
             return Collections.emptyList();
         } catch (Exception e) {
-            log.error("Erreur lors de la récupération des notes patient depuis {}: {}", url, e.getMessage(), e);
+            log.error("Erreur lors de la récupération des notes patient (via Feign) pour ID {}: {}", patientId, e.getMessage(), e);
             return Collections.emptyList();
         }
     }
