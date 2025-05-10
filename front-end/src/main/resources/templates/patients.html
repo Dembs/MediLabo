@@ -14,7 +14,7 @@
         .navbar-brand { color: #0d6efd; font-weight: 600; font-size: 1.5rem; }
         .nav-link { color: #6c757d; }
         .nav-link.active { color: #0d6efd; font-weight: 500; }
-        .container { margin-top: 2rem; max-width: 1140px; } /* Ajusté la largeur max */
+        .container { margin-top: 2rem; max-width: 1140px; }
         .page-header { margin-bottom: 2rem; }
         .page-header h1 { font-size: 2rem; font-weight: 600; }
         .page-header p { color: #6c757d; }
@@ -100,7 +100,7 @@
                                 <span th:text="${patient.lastName + ' ' + patient.firstName}">Nom complet</span>
                             </a>
                         </td>
-                        <td th:text="${#strings.length(patient.birthdate) == 10 ? #strings.replace(patient.birthdate, '-', '/') : patient.birthdate}">15/05/1975</td>
+                        <td class="text-center" th:text="${#strings.length(patient.birthdate) == 10 ? #strings.replace(patient.birthdate, '-', '/') : patient.birthdate}">15/05/1975</td>
                         <!-- Afficher l'âge calculé -->
                         <td class="text-center">
                             <span th:if="${patient.age != null}" th:text="${patient.age + ' ans'}">49 ans</span>

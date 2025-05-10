@@ -3,6 +3,8 @@ package com.medilabo.diabetes_service.service;
 import com.medilabo.diabetes_service.dto.NoteDTO;
 import com.medilabo.diabetes_service.dto.PatientDTO;
 import com.medilabo.diabetes_service.enums.DiabetesRiskLevel;
+import com.medilabo.diabetes_service.proxies.NoteProxy;
+import com.medilabo.diabetes_service.proxies.PatientProxy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,17 +32,14 @@ import static org.mockito.Mockito.*;
 class DiabetesServiceTest {
 
     @Mock
-    private RestTemplate restTemplate;
+    private PatientProxy patientProxy;
+
+    @Mock
+    private NoteProxy noteProxy;
 
     @InjectMocks
     private DiabetesService diabetesService;
 
-    @BeforeEach
-    void setUp() {
-
-        ReflectionTestUtils.setField(diabetesService, "patientServiceUrl", "http://patient-service/patients");
-        ReflectionTestUtils.setField(diabetesService, "noteServiceUrl", "http://note-service/notes");
-    }
 
 
     @Test
@@ -49,20 +48,15 @@ class DiabetesServiceTest {
         patient.setId(1);
         patient.setGender("M");
         patient.setBirthdate(LocalDate.now().minusYears(40));
+        when(patientProxy.getPatientById(1)).thenReturn(patient);
 
-        ResponseEntity<PatientDTO> patientResponse = ResponseEntity.ok(patient);
-        when(restTemplate.getForEntity(anyString(), eq(PatientDTO.class))).thenReturn(patientResponse);
-
-        when(restTemplate.exchange(
-                anyString(),
-                eq(HttpMethod.GET),
-                eq(null),
-                any(ParameterizedTypeReference.class)
-        )).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(noteProxy.getNotesByPatientId(1)).thenReturn(Collections.emptyList());
 
         DiabetesRiskLevel result = diabetesService.assessDiabetesRisk(1);
 
         assertEquals(DiabetesRiskLevel.NONE, result);
+        verify(patientProxy).getPatientById(1);
+        verify(noteProxy).getNotesByPatientId(1);
     }
 
     @Test
@@ -78,21 +72,16 @@ class DiabetesServiceTest {
         note2.setNote("Patient a microalbumine and problèmes de poids ");
         NoteDTO note3 = new NoteDTO();
         note3.setNote("Patient montre des signes of vertige");
+        List<NoteDTO> notes = Arrays.asList(note1, note2, note3);
 
-        ResponseEntity<PatientDTO> patientResponse = ResponseEntity.ok(patient);
-        when(restTemplate.getForEntity(anyString(), eq(PatientDTO.class))).thenReturn(patientResponse);
-
-        ResponseEntity<List<NoteDTO>> notesResponse = ResponseEntity.ok(Arrays.asList(note1, note2, note3));
-        when(restTemplate.exchange(
-                anyString(),
-                eq(HttpMethod.GET),
-                eq(null),
-                any(ParameterizedTypeReference.class)
-        )).thenReturn(notesResponse);
+        when(patientProxy.getPatientById(1)).thenReturn(patient);
+        when(noteProxy.getNotesByPatientId(1)).thenReturn(notes);
 
         DiabetesRiskLevel result = diabetesService.assessDiabetesRisk(1);
 
         assertEquals(DiabetesRiskLevel.IN_DANGER, result);
+        verify(patientProxy).getPatientById(1);
+        verify(noteProxy).getNotesByPatientId(1);
     }
 
     @Test
@@ -104,21 +93,16 @@ class DiabetesServiceTest {
 
         NoteDTO note = new NoteDTO();
         note.setNote("Patient montre des signes d'hémoglobine a1c, microalbumine, taille, poids, fumeur, anormal, cholestérol, vertige");
+        List<NoteDTO> notes = Collections.singletonList(note);
 
-        ResponseEntity<PatientDTO> patientResponse = ResponseEntity.ok(patient);
-        when(restTemplate.getForEntity(anyString(), eq(PatientDTO.class))).thenReturn(patientResponse);
-
-        ResponseEntity<List<NoteDTO>> notesResponse = ResponseEntity.ok(Collections.singletonList(note));
-        when(restTemplate.exchange(
-                anyString(),
-                eq(HttpMethod.GET),
-                eq(null),
-                any(ParameterizedTypeReference.class)
-        )).thenReturn(notesResponse);
+        when(patientProxy.getPatientById(2)).thenReturn(patient);
+        when(noteProxy.getNotesByPatientId(2)).thenReturn(notes);
 
         DiabetesRiskLevel result = diabetesService.assessDiabetesRisk(2);
 
         assertEquals(DiabetesRiskLevel.EARLY_ONSET, result);
+        verify(patientProxy).getPatientById(2);
+        verify(noteProxy).getNotesByPatientId(2);
     }
 
     @Test
@@ -130,20 +114,15 @@ class DiabetesServiceTest {
 
         NoteDTO note = new NoteDTO();
         note.setNote("Patient montre des signes de cholestérol and poids");
+        List<NoteDTO> notes = Collections.singletonList(note);
 
-        ResponseEntity<PatientDTO> patientResponse = ResponseEntity.ok(patient);
-        when(restTemplate.getForEntity(anyString(), eq(PatientDTO.class))).thenReturn(patientResponse);
-
-        ResponseEntity<List<NoteDTO>> notesResponse = ResponseEntity.ok(Collections.singletonList(note));
-        when(restTemplate.exchange(
-                anyString(),
-                eq(HttpMethod.GET),
-                eq(null),
-                any(ParameterizedTypeReference.class)
-        )).thenReturn(notesResponse);
+        when(patientProxy.getPatientById(3)).thenReturn(patient);
+        when(noteProxy.getNotesByPatientId(3)).thenReturn(notes);
 
         DiabetesRiskLevel result = diabetesService.assessDiabetesRisk(3);
 
         assertEquals(DiabetesRiskLevel.BORDERLINE, result);
+        verify(patientProxy).getPatientById(3);
+        verify(noteProxy).getNotesByPatientId(3);
     }
 }

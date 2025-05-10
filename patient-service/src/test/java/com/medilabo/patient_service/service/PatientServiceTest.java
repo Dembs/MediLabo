@@ -109,7 +109,7 @@ public class PatientServiceTest {
         assertEquals("Nouvelle Adresse", result.getAddress());
         assertEquals("999-888-7777", result.getPhoneNumber());
 
-        assertEquals("1980-01-15", result.getBirthdate());
+        assertEquals(LocalDate.parse("1980-01-15"), result.getBirthdate());
         assertEquals("M", result.getGender());
 
         verify(patientRepository, times(1)).findById(1);

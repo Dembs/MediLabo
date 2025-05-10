@@ -1,5 +1,6 @@
 package com.medilabo.diabetes_service.config;
 
+import feign.auth.BasicAuthRequestInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,17 +20,13 @@ import org.springframework.web.client.RestTemplate;
     @Value("${GATEWAY_AUTH_PASSWORD}")
     private String backendApiPassword;
     /**
-     * Crée et configure un RestTemplate utilisé par l'application pour
+     * Crée et configure un Interceptor utilisé par l'application pour
      * effectuer des appels HTTP vers les API des microservices backend.
      *
      * @return Une instance de RestTemplate prête à l'emploi
      */
     @Bean
-    public RestTemplate restTemplate() {
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getInterceptors().add(
-                new BasicAuthenticationInterceptor(backendApiUsername, backendApiPassword)
-        );
-        return restTemplate;
+    public BasicAuthRequestInterceptor basicAuthRequestInterceptor() {
+        return new BasicAuthRequestInterceptor(backendApiUsername, backendApiPassword);
     }
  }
